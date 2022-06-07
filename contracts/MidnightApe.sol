@@ -2,30 +2,37 @@
 pragma solidity ^0.8.4;
 
 import './extensions/ERC721AQueryable.sol';
-import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
 
-contract MidnightApes is ERC721AQueryable,ReentrancyGuard {
+contract MidnightApes is ERC721AQueryable ,Ownable{
     bool public revealed = false;
 
     string baseURI;
-    string initialMetaData;
+    string hiddenMetadataURI;
 
-    address public  _owner;
+    address private  _owner;
     bool public freeMint = true;
 
     uint256 public mintPrice = 0.05 ether;
     uint256 startTime;
     bool started = false;
 
+    uint128 public constant MAX_TOKENS = 10000;
+    uint128 public constant ADMIN_AMOUNT = 500;
+    uint128 public constant FREE_AMOUNT = 2500;
+    uint256 admin_count = 0;
 
-    constructor(string memory initData_) ERC721A("Midnight Bird Ape Yacht Club", "MidnightApes") {
-        initialMetaData = initData_;
+
+    constructor(string memory _hiddenMetadataURI) ERC721A("Midnight Bird Ape Yacht Club", "MidnightApes") {
+        hiddenMetadataURI = _hiddenMetadataURI;
         _owner = payable(msg.sender);
     }
 
-    function safeMint(uint256 quantity) external  payable nonReentrant  {
+    function mint(uint256 quantity) external  payable  {
 
         require(started,"not started to sell");
+
+        require(totalMinted() + quantity<= MAX_TOKENS,"Over total NFTs");
 
         if(freeMint){
             if(totalMinted() >= 2500){
@@ -37,10 +44,10 @@ contract MidnightApes is ERC721AQueryable,ReentrancyGuard {
         }
 
         if(freeMint){
-            require(quantity <=  2,"Over limit to mint at once");
+            require(quantity <=  2,"Over limit to mint at once in free sale");
             require(numberMinted(msg.sender) + quantity <= 2,"Over free mint amount");
         }else{
-            require(quantity <=  10,"Over limit to mint at once");
+            require(quantity <=  10,"Over limit to mint at once in public sale");
 
             uint256 price = mintPrice * quantity; 
 
@@ -50,15 +57,20 @@ contract MidnightApes is ERC721AQueryable,ReentrancyGuard {
         _safeMint(msg.sender, quantity);
     }
 
-    function setMintPrice(uint256 _price) external {
-        require(msg.sender == _owner, "Error, you are not the owner");
+    function setMintPrice(uint256 _price) external onlyOwner {
         mintPrice = _price;
     }
 
-    function startMint() external {
-        require(msg.sender == _owner, "Error, you are not the owner");
+    function startMint() external onlyOwner {
         startTime = block.timestamp;
         started =  true;
+    }
+
+    function adminMint(uint256 quantity) external onlyOwner {
+        require(quantity <= 100,"Over nft amount in one claim");
+        require(admin_count + quantity <= ADMIN_AMOUNT,"Over admin nft claim");
+        admin_count += quantity;
+        _safeMint(msg.sender, quantity);
     }
 
     function getOwnershipAt(uint256 index) public view returns (TokenOwnership memory) {
@@ -86,39 +98,32 @@ contract MidnightApes is ERC721AQueryable,ReentrancyGuard {
         return _nextTokenId();
     }
 
-    function getAux(address owner) public view returns (uint64) {
-        return _getAux(owner);
-    }
-
-    function setAux(address owner, uint64 aux) external {
-        _setAux(owner, aux);
-    }
-
-
-    function setBaseURI(string memory _baseURI) external {
-        require(msg.sender == _owner, "Error, you are not the owner");
+    function setBaseURI(string memory _baseURI) external onlyOwner {
         require(!revealed,"Not possible to change the baseURI after revealed");
         baseURI = _baseURI;
     }
 
-    function revealNFT() external {
-        require(msg.sender == _owner, "Error, you are not the owner");
-        revealed = true;
+    function sethiddenMetadataURI(string memory _hiddenMetadataURI) external onlyOwner {
+       hiddenMetadataURI = _hiddenMetadataURI;
     }
 
+
+    function revealNFT() external onlyOwner {
+        revealed = true;
+    }
 
     function tokenURI(uint256 tokenId)
         public
         view
         virtual
-        override(ERC721A)
+        override(ERC721A,IERC721A)
         returns (string memory)
     {
 
         if (!_exists(tokenId)) revert URIQueryForNonexistentToken();
 
-        if(!revealed){
-            return initialMetaData;
+        if(revealed == false){
+            return hiddenMetadataURI;
         }
 
         string memory _tokenURI =  bytes(baseURI).length != 0 ? string(abi.encodePacked(baseURI,"/", _toString(tokenId), ".json")) : '';
@@ -133,12 +138,7 @@ contract MidnightApes is ERC721AQueryable,ReentrancyGuard {
         return _ownershipOf(index);
     }
 
-    function initializeOwnershipAt(uint256 index) external {
-        _initializeOwnershipAt(index);
-    }
-
-    function withdrawETH(address recipient, uint256 amount) external  {
-        require(msg.sender == _owner, "Error, you are not the owner");
+    function withdrawETH(address recipient, uint256 amount) external onlyOwner  {
         require(address(this).balance > 0, "Insufficient balance");
         (bool res,) = recipient.call{value : amount}("");
         require(res, "ETH TRANSFER FAILED");
