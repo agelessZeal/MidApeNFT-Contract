@@ -15,7 +15,7 @@ contract MidnightApes is ERC721AQueryable ,Ownable{
 
     uint256 public mintPrice = 0.05 ether;
     uint256 startTime;
-    bool started = false;
+    bool public started = false;
 
     uint128 public constant MAX_TOKENS = 10000;
     uint128 public constant ADMIN_AMOUNT = 500;
@@ -44,10 +44,10 @@ contract MidnightApes is ERC721AQueryable ,Ownable{
         }
 
         if(freeMint){
-            require(quantity <=  2,"Over limit to mint at once in free sale");
+            require(quantity <=  2,"Over mint limit for one transaction in free sale");
             require(numberMinted(msg.sender) + quantity <= 2,"Over free mint amount");
         }else{
-            require(quantity <=  10,"Over limit to mint at once in public sale");
+            require(quantity <=  10,"Over mint limit for one transaction in public sale");
 
             uint256 price = mintPrice * quantity; 
 

@@ -29,7 +29,7 @@ async function main () {
 
     const baseURI = 'https://xxx.mypinata.cloud/ipfs/'
 
-    const initURI = "https://nft.service.cometh.io/1000422";
+    const initURI = "https://midnight.mypinata.cloud/ipfs/QmSHuNNk7gk4S6o3LdT3NBao4iQmxTR8bjrTLfW6UaXakv";
 
     const MidnightApes = await ethers.getContractFactory("MidnightApes", deployer);
 
