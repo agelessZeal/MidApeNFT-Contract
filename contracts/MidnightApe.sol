@@ -20,7 +20,7 @@ contract MidnightApes is ERC721AQueryable ,Ownable{
     uint128 public constant MAX_TOKENS = 10000;
     uint128 public constant ADMIN_AMOUNT = 500;
     uint128 public constant FREE_AMOUNT = 2500;
-    uint256 admin_count = 0;
+    uint256 public admin_count = 0;
 
 
     constructor(string memory _hiddenMetadataURI) ERC721A("Midnight Bird Ape Yacht Club", "MidnightApes") {
@@ -35,7 +35,7 @@ contract MidnightApes is ERC721AQueryable ,Ownable{
         require(totalMinted() + quantity<= MAX_TOKENS,"Over total NFTs");
 
         if(freeMint){
-            if(totalMinted() >= 2500){
+            if(totalMinted() >= FREE_AMOUNT){
                 freeMint = false;
             }
             if(startTime + 5 hours <= block.timestamp){
@@ -52,6 +52,10 @@ contract MidnightApes is ERC721AQueryable ,Ownable{
             uint256 price = mintPrice * quantity; 
 
             require(msg.value >= price, "not enough funds");
+
+            uint256 admin_remained =  ADMIN_AMOUNT - admin_count;
+
+            require(totalMinted() + quantity  + admin_remained <= MAX_TOKENS,"Over mint amount than possible to mint");
         }
 
         _safeMint(msg.sender, quantity);
