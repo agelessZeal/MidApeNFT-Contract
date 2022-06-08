@@ -27,7 +27,7 @@ async function main () {
 
     console.log('network:', await ethers.provider.getNetwork())
 
-    const hiddenMetaData = "https://midnight.mypinata.cloud/ipfs/QmSHuNNk7gk4S6o3LdT3NBao4iQmxTR8bjrTLfW6UaXakv";
+    const hiddenMetaData = "https://midnight.mypinata.cloud/ipfs/QmdBcCuX8oYMPGAojZQV7UtZ6Ufip1eWAqsfsmcMPBJkKR";
 
     const MidnightApes = await ethers.getContractFactory("MidnightApes", deployer);
 

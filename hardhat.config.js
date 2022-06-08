@@ -1,15 +1,16 @@
-require('@nomiclabs/hardhat-waffle');
-require('@nomiclabs/hardhat-ethers');
+// require('@nomiclabs/hardhat-waffle');
+// require('@nomiclabs/hardhat-ethers');
 
-if (process.env.REPORT_GAS) {
-  require('hardhat-gas-reporter');
-}
+// if (process.env.REPORT_GAS) {
+//   require('hardhat-gas-reporter');
+// }
 
-if (process.env.REPORT_COVERAGE) {
-  require('solidity-coverage');
-}
+// if (process.env.REPORT_COVERAGE) {
+//   require('solidity-coverage');
+// }
 
 require('dotenv').config()
+require('@nomiclabs/hardhat-ethers')
 // require('@eth-optimism/plugins/hardhat/compiler')
 // require('@eth-optimism/plugins/hardhat/ethers')
 

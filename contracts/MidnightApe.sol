@@ -4,11 +4,11 @@ pragma solidity ^0.8.4;
 import './extensions/ERC721AQueryable.sol';
 import "@openzeppelin/contracts/access/Ownable.sol";
 
-contract MidnightApes is ERC721AQueryable ,Ownable{
+contract MidnightApes is ERC721AQueryable,Ownable {
     bool public revealed = false;
 
     string baseURI;
-    string hiddenMetadataURI;
+    string hiddenURI;
 
     address private  _owner;
     bool public freeMint = true;
@@ -20,11 +20,11 @@ contract MidnightApes is ERC721AQueryable ,Ownable{
     uint128 public constant MAX_TOKENS = 10000;
     uint128 public constant ADMIN_AMOUNT = 500;
     uint128 public constant FREE_AMOUNT = 2500;
-    uint256 public admin_count = 0;
+    uint256 public adminCount = 0;
 
 
-    constructor(string memory _hiddenMetadataURI) ERC721A("Midnight Bird Ape Yacht Club", "MidnightApes") {
-        hiddenMetadataURI = _hiddenMetadataURI;
+    constructor(string memory _hiddenURI) ERC721A("Midnight Bird Ape Yacht Club", "MidnightApes") {
+        hiddenURI = _hiddenURI;
         _owner = payable(msg.sender);
     }
 
@@ -32,7 +32,7 @@ contract MidnightApes is ERC721AQueryable ,Ownable{
 
         require(started,"not started to sell");
 
-        require(totalMinted() + quantity<= MAX_TOKENS,"Over total NFTs");
+        require(totalMinted() + quantity<= MAX_TOKENS,"Over Total NFTs");
 
         if(freeMint){
             if(totalMinted() >= FREE_AMOUNT){
@@ -44,18 +44,18 @@ contract MidnightApes is ERC721AQueryable ,Ownable{
         }
 
         if(freeMint){
-            require(quantity <=  2,"Over mint limit for one transaction in free sale");
-            require(numberMinted(msg.sender) + quantity <= 2,"Over free mint amount");
+            require(quantity <=  5,"Over mint limit for one transaction in free sale");
+            require(numberMinted(msg.sender) + quantity <= 10,"Over free mint amount");
         }else{
-            require(quantity <=  10,"Over mint limit for one transaction in public sale");
+            require(quantity <=  20,"Over mint limit for one transaction in public sale");
 
             uint256 price = mintPrice * quantity; 
 
             require(msg.value >= price, "not enough funds");
 
-            uint256 admin_remained =  ADMIN_AMOUNT - admin_count;
+            uint256 adminRemained =  ADMIN_AMOUNT - adminCount;
 
-            require(totalMinted() + quantity  + admin_remained <= MAX_TOKENS,"Over mint amount than possible to mint");
+            require(totalMinted() + quantity  + adminRemained <= MAX_TOKENS,"Over mint amount than possible to mint");
         }
 
         _safeMint(msg.sender, quantity);
@@ -70,10 +70,10 @@ contract MidnightApes is ERC721AQueryable ,Ownable{
         started =  true;
     }
 
-    function adminMint(uint256 quantity) external onlyOwner {
+    function adminMint(uint256 quantity) external onlyOwner  {
         require(quantity <= 100,"Over nft amount in one claim");
-        require(admin_count + quantity <= ADMIN_AMOUNT,"Over admin nft claim");
-        admin_count += quantity;
+        require(adminCount + quantity <= ADMIN_AMOUNT,"Over admin nft claim");
+        adminCount += quantity;
         _safeMint(msg.sender, quantity);
     }
 
@@ -107,14 +107,15 @@ contract MidnightApes is ERC721AQueryable ,Ownable{
         baseURI = _baseURI;
     }
 
-    function sethiddenMetadataURI(string memory _hiddenMetadataURI) external onlyOwner {
-       hiddenMetadataURI = _hiddenMetadataURI;
+    function sethiddenMetadataURI(string memory _hiddenURI) external  onlyOwner {
+       hiddenURI = _hiddenURI;
     }
 
 
-    function revealNFT() external onlyOwner {
+    function revealNFT() external onlyOwner  {
         revealed = true;
     }
+
 
     function tokenURI(uint256 tokenId)
         public
@@ -127,22 +128,18 @@ contract MidnightApes is ERC721AQueryable ,Ownable{
         if (!_exists(tokenId)) revert URIQueryForNonexistentToken();
 
         if(revealed == false){
-            return hiddenMetadataURI;
+            return hiddenURI;
         }
 
         string memory _tokenURI =  bytes(baseURI).length != 0 ? string(abi.encodePacked(baseURI,"/", _toString(tokenId), ".json")) : '';
         return _tokenURI;
     }
 
-    function toString(uint256 x) public pure returns (string memory) {
-        return _toString(x);
-    }
-
     function getOwnershipOf(uint256 index) public view returns (TokenOwnership memory) {
         return _ownershipOf(index);
     }
 
-    function withdrawETH(address recipient, uint256 amount) external onlyOwner  {
+    function withdrawETH(address recipient, uint256 amount) external  onlyOwner {
         require(address(this).balance > 0, "Insufficient balance");
         (bool res,) = recipient.call{value : amount}("");
         require(res, "ETH TRANSFER FAILED");
